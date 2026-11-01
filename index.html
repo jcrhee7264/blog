@@ -2186,6 +2186,52 @@
       min-width: 3rem;
       text-align: right;
     }
+
+    /* [살아있는 사료 (Living Photo) — 호버/터치 시 영상 재생] */
+    .living-photo-wrap {
+      position: relative;
+      width: fit-content;
+      max-width: 100%;
+      margin: 1.5rem auto;
+    }
+    .floating-body .living-photo-wrap img {
+      margin: 0;
+      transition: opacity 0.6s ease;
+    }
+    .living-photo-wrap video {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 8px;
+      opacity: 0;
+      transition: opacity 0.6s ease;
+      pointer-events: none;
+    }
+    .living-photo-wrap.playing img {
+      opacity: 0;
+    }
+    .living-photo-wrap.playing video {
+      opacity: 1;
+    }
+    .living-photo-badge {
+      position: absolute;
+      top: 0.6rem;
+      right: 0.6rem;
+      padding: 0.25rem 0.6rem;
+      border-radius: 999px;
+      background: rgba(15, 20, 28, 0.78);
+      border: 1px solid var(--border-gold);
+      color: var(--gold-light);
+      font-size: 0.72rem;
+      font-weight: 600;
+      line-height: 1.4;
+      letter-spacing: 0.02em;
+      box-shadow: 0 0 12px var(--gold-glow);
+      pointer-events: none;
+      z-index: 1;
+    }
   </style>
 </head>
 <body>
@@ -3538,6 +3584,51 @@
         const hasCaption = !!img.parentElement.querySelector('.img-caption');
         img.onclick = () => openLightbox(img.src, hasCaption ? img.alt : '');
       });
+
+      applyLivingPhoto(modalBody);
+    }
+
+    // ---------------------------------------------------- 살아있는 사료 (Living Photo)
+    // logNo → 본문 내 사진 순번(0부터)과 연결 영상
+    const LIVING_PHOTOS = {
+      '223453197936': { imageIndex: 0, video: 'vidclip/행진관등성명(1968.1.25).mp4' }
+    };
+
+    function applyLivingPhoto(modalBody) {
+      const conf = LIVING_PHOTOS[readerState.currentPost.logNo];
+      const img = conf && modalBody.querySelectorAll('img')[conf.imageIndex];
+      if (!img) return;
+
+      const wrap = document.createElement('div');
+      wrap.className = 'living-photo-wrap';
+      const video = document.createElement('video');
+      video.src = encodeURI(conf.video);
+      video.muted = true;
+      video.loop = true;
+      video.playsInline = true;
+      video.preload = 'metadata';
+      const badge = document.createElement('span');
+      badge.className = 'living-photo-badge';
+      badge.textContent = '✨ 살아있는 사료 (Hover / 터치 시 재생)';
+      img.before(wrap);
+      wrap.append(img, video, badge);
+
+      const play = () => { wrap.classList.add('playing'); video.play().catch(() => {}); };
+      const stop = () => { wrap.classList.remove('playing'); video.pause(); };
+      let lastPointer = 'mouse';
+      wrap.addEventListener('pointerdown', (e) => { lastPointer = e.pointerType; });
+      wrap.addEventListener('pointerenter', (e) => { if (e.pointerType === 'mouse') play(); });
+      wrap.addEventListener('pointerleave', (e) => { if (e.pointerType === 'mouse') stop(); });
+
+      // 터치: 첫 탭은 재생, 재생 중 탭은 라이트박스 확대 / 마우스: 클릭 시 바로 라이트박스
+      const openInLightbox = img.onclick;
+      img.onclick = () => {
+        if (lastPointer !== 'mouse' && !wrap.classList.contains('playing')) {
+          play();
+          return;
+        }
+        openInLightbox();
+      };
     }
 
     // ---------------------------------------------------- 사료 사진 라이트박스 뷰어

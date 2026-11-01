@@ -2103,6 +2103,89 @@
         padding: 0.25rem 0.5rem;
       }
     }
+
+    /* [1차 사료 사진 라이트박스 뷰어] */
+    #modalBody img {
+      cursor: zoom-in;
+    }
+    .image-lightbox-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.92);
+      z-index: 10050;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.8rem;
+      touch-action: manipulation;
+    }
+    .image-lightbox-overlay.active {
+      display: flex;
+    }
+    .image-lightbox-content {
+      max-width: 90vw;
+      max-height: 85vh;
+      overflow: auto;
+      display: flex;
+      -webkit-overflow-scrolling: touch;
+    }
+    .image-lightbox-content.zoomed {
+      width: 90vw;
+      height: 85vh;
+      cursor: grab;
+    }
+    .image-lightbox-content img {
+      max-width: 90vw;
+      max-height: 85vh;
+      margin: auto;
+      object-fit: contain;
+      border-radius: 4px;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.8);
+      cursor: zoom-in;
+      user-select: none;
+    }
+    .image-lightbox-content.zoomed img {
+      max-width: none;
+      max-height: none;
+      cursor: zoom-out;
+    }
+    .lightbox-caption {
+      max-width: 90vw;
+      color: #E2E8F0;
+      font-size: 0.9rem;
+      text-align: center;
+      line-height: 1.5;
+    }
+    .lightbox-toolbar {
+      position: absolute;
+      top: 0.8rem;
+      right: 0.8rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      z-index: 1;
+    }
+    .lightbox-toolbar button {
+      background: rgba(24, 34, 50, 0.85);
+      color: var(--gold-light);
+      border: 1px solid var(--border-gold);
+      border-radius: 6px;
+      padding: 0.4rem 0.7rem;
+      font-size: 0.85rem;
+      cursor: pointer;
+    }
+    .lightbox-toolbar .lightbox-close-btn {
+      font-size: 1.3rem;
+      line-height: 1;
+      padding: 0.3rem 0.65rem;
+    }
+    .lightbox-zoom-label {
+      color: #94A3B8;
+      font-size: 0.78rem;
+      min-width: 3rem;
+      text-align: right;
+    }
   </style>
 </head>
 <body>
@@ -3449,7 +3532,98 @@
       });
 
       modalBody.innerHTML = finalHtml;
+
+      // 본문 사료 사진 클릭 시 라이트박스 확대 (기계적 alt는 캡션이 숨겨져 있으므로 일기 제목으로 대체)
+      modalBody.querySelectorAll('img').forEach(img => {
+        const hasCaption = !!img.parentElement.querySelector('.img-caption');
+        img.onclick = () => openLightbox(img.src, hasCaption ? img.alt : '');
+      });
     }
+
+    // ---------------------------------------------------- 사료 사진 라이트박스 뷰어
+    const lightboxState = { scale: 1, fitWidth: 0 };
+
+    function openLightbox(src, alt) {
+      const img = document.getElementById('lightboxImage');
+      const caption = (alt && alt !== '사료 사진') ? alt : (readerState.currentPost ? readerState.currentPost.title : '');
+      lightboxState.scale = 1;
+      img.onload = updateLightboxLabel;
+      img.src = src;
+      img.alt = caption || '사료 사진';
+      document.getElementById('lightboxCaption').textContent = caption ? `▲ ${caption}` : '';
+      applyLightboxScale();
+      document.getElementById('imageLightboxModal').classList.add('active');
+    }
+
+    function closeLightbox() {
+      document.getElementById('imageLightboxModal').classList.remove('active');
+      document.getElementById('lightboxImage').removeAttribute('src');
+    }
+
+    function applyLightboxScale(anchorX, anchorY) {
+      const img = document.getElementById('lightboxImage');
+      const stage = document.getElementById('lightboxStage');
+      const prevWidth = img.clientWidth;
+      if (lightboxState.scale <= 1) {
+        lightboxState.scale = 1;
+        img.style.width = '';
+        stage.classList.remove('zoomed');
+      } else {
+        stage.classList.add('zoomed');
+        img.style.width = `${lightboxState.fitWidth * lightboxState.scale}px`;
+        // 휠 위치(또는 화면 중앙)를 기준점으로 유지하며 확대
+        const ax = anchorX ?? stage.clientWidth / 2;
+        const ay = anchorY ?? stage.clientHeight / 2;
+        const ratio = img.clientWidth / (prevWidth || img.clientWidth);
+        stage.scrollLeft = (stage.scrollLeft + ax) * ratio - ax;
+        stage.scrollTop = (stage.scrollTop + ay) * ratio - ay;
+      }
+      updateLightboxLabel();
+    }
+
+    function updateLightboxLabel() {
+      const img = document.getElementById('lightboxImage');
+      const pct = img.naturalWidth ? Math.round(img.clientWidth / img.naturalWidth * 100) : 100;
+      document.getElementById('lightboxZoomLabel').textContent = `${pct}%`;
+      document.getElementById('btnLightboxOriginal').textContent = lightboxState.scale > 1 ? '화면 맞춤' : '100% 원본 보기';
+    }
+
+    function zoomLightbox(factor, anchorX, anchorY) {
+      const img = document.getElementById('lightboxImage');
+      if (lightboxState.scale === 1) lightboxState.fitWidth = img.clientWidth;
+      if (!lightboxState.fitWidth) return;
+      const maxScale = Math.max(5, img.naturalWidth / lightboxState.fitWidth);
+      lightboxState.scale = Math.min(maxScale, lightboxState.scale * factor);
+      applyLightboxScale(anchorX, anchorY);
+    }
+
+    function toggleLightboxOriginal() {
+      const img = document.getElementById('lightboxImage');
+      if (lightboxState.scale > 1) {
+        lightboxState.scale = 1;
+        applyLightboxScale();
+      } else if (img.naturalWidth > img.clientWidth) {
+        zoomLightbox(img.naturalWidth / img.clientWidth);
+      }
+    }
+
+    function handleLightboxWheel(e) {
+      e.preventDefault();
+      const rect = e.currentTarget.getBoundingClientRect();
+      zoomLightbox(e.deltaY < 0 ? 1.15 : 1 / 1.15, e.clientX - rect.left, e.clientY - rect.top);
+    }
+
+    function handleLightboxBackdrop(e) {
+      if (e.target.id === 'imageLightboxModal' || e.target.id === 'lightboxStage') closeLightbox();
+    }
+
+    // 라이트박스가 열려 있으면 Esc는 라이트박스만 닫음 (원문 모달은 유지)
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && document.getElementById('imageLightboxModal').classList.contains('active')) {
+        e.stopPropagation();
+        closeLightbox();
+      }
+    }, true);
 
     function openPostModal(post) {
       const overlay = document.getElementById('postModalOverlay');
@@ -3899,6 +4073,19 @@
         <button class="nav-btn" onclick="closePostModal()">창 닫기</button>
       </div>
     </div>
+  </div>
+
+  <!-- [1차 사료 사진 라이트박스 뷰어] -->
+  <div class="image-lightbox-overlay" id="imageLightboxModal" onclick="handleLightboxBackdrop(event)">
+    <div class="lightbox-toolbar">
+      <span class="lightbox-zoom-label" id="lightboxZoomLabel">100%</span>
+      <button id="btnLightboxOriginal" onclick="toggleLightboxOriginal()" title="원본 크기 / 화면 맞춤 전환">100% 원본 보기</button>
+      <button class="lightbox-close-btn" onclick="closeLightbox()" title="닫기 (ESC)">×</button>
+    </div>
+    <div class="image-lightbox-content" id="lightboxStage" onwheel="handleLightboxWheel(event)">
+      <img id="lightboxImage" alt="" ondblclick="toggleLightboxOriginal()" draggable="false">
+    </div>
+    <div class="lightbox-caption" id="lightboxCaption"></div>
   </div>
 
 </body>

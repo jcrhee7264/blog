@@ -424,6 +424,69 @@
       height: 100%;
       object-fit: contain;
     }
+    .cinema-cover-wrap {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      background: #000;
+    }
+    .cinema-cover-img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      transition: transform 0.4s ease, filter 0.4s ease;
+    }
+    .cinema-cover-wrap:hover .cinema-cover-img {
+      transform: scale(1.02);
+      filter: brightness(0.92);
+    }
+    .cinema-cover-overlay {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.6) 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.9rem;
+      transition: background 0.3s ease;
+    }
+    .cinema-cover-wrap:hover .cinema-cover-overlay {
+      background: radial-gradient(circle, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.5) 100%);
+    }
+    .cinema-play-btn-circle {
+      width: 76px;
+      height: 76px;
+      border-radius: 50%;
+      background: rgba(212, 175, 55, 0.95);
+      color: #000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 25px rgba(212, 175, 55, 0.7);
+      transition: transform 0.25s ease, box-shadow 0.25s ease;
+      font-size: 2.2rem;
+      padding-left: 5px;
+    }
+    .cinema-cover-wrap:hover .cinema-play-btn-circle {
+      transform: scale(1.12);
+      box-shadow: 0 0 35px rgba(212, 175, 55, 0.95);
+    }
+    .cinema-cover-caption {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #FFF;
+      text-shadow: 0 2px 6px rgba(0,0,0,0.9);
+      background: rgba(0,0,0,0.65);
+      padding: 0.35rem 0.9rem;
+      border-radius: 20px;
+      border: 1px solid rgba(212,175,55,0.4);
+    }
     .cinema-stage-footer {
       padding: 0.9rem 1.4rem;
       display: flex;
@@ -2269,7 +2332,17 @@
           </div>
 
           <div class="cinema-video-container">
-            <video id="heroVideo" controls autoplay playsinline preload="auto" poster="assets/anchor_50s.png">
+            <!-- 기본 상태: 웅장한 아카이브 커버 아트 & 영상 재생 오버레이 -->
+            <div class="cinema-cover-wrap" id="heroCoverWrap" onclick="startHeroVideo()">
+              <img src="assets/cover.png" alt="이재천 장군 디지털 아카이브 메인 커버" class="cinema-cover-img" id="heroCoverImg">
+              <div class="cinema-cover-overlay">
+                <div class="cinema-play-btn-circle">▶</div>
+                <div class="cinema-cover-caption">헌정 시네마틱 다큐멘터리 영상 재생 (3:31)</div>
+              </div>
+            </div>
+
+            <!-- 재생 활성화 시 전환되는 비디오 플레이어 -->
+            <video id="heroVideo" controls playsinline preload="none" poster="assets/cover.png" style="display:none;">
               <source src="assets/이재천_삶_50년_일대기_38장_완전판_BGM완성본.mp4" type="video/mp4">
               브라우저가 비디오 재생을 지원하지 않습니다.
             </video>
@@ -2411,9 +2484,23 @@
       }
     } catch(e) {}
 
-// [영상 스테이지 재생 엔진 (50년 일대기 vs 나의 50년 골든무비)]
+// [커버 아트에서 영상 플레이어로 원터치 전환 재생]
+    function startHeroVideo() {
+      const heroCover = document.getElementById('heroCoverWrap');
+      const heroVid = document.getElementById('heroVideo');
+      if (heroCover) heroCover.style.display = 'none';
+      if (heroVid) {
+        heroVid.style.display = 'block';
+        heroVid.play().catch(e => console.log('Autoplay handled:', e));
+      }
+    }
+
+    // [영상 스테이지 재생 엔진 (50년 일대기 vs 나의 50년 골든무비)]
     function playVideoStage(type) {
       const heroVid = document.getElementById('heroVideo');
+      const heroCover = document.getElementById('heroCoverWrap');
+      if (heroCover) heroCover.style.display = 'none';
+      if (heroVid) heroVid.style.display = 'block';
       const titleEl = document.querySelector('.cinema-stage-title');
       const badgeEl = document.querySelector('.cinema-stage-badge');
       const descEl = document.querySelector('.cinema-desc');

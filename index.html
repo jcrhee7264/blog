@@ -1896,6 +1896,150 @@
       color: #000;
       font-weight: 700;
     }
+
+    /* ==================================================== [모바일 & 태블릿 완벽 반응형 CSS (소이사 V3 규격)] */
+    @media (max-width: 900px) {
+      /* 1. 상단 글로벌 헤더 모바일 최적화 */
+      .top-header {
+        height: auto;
+        padding: 0.6rem 0.8rem;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+      }
+      .brand-wrap {
+        gap: 0.5rem;
+      }
+      .brand-title {
+        font-size: 1rem;
+      }
+      .brand-badge {
+        font-size: 0.65rem;
+        padding: 0.15rem 0.4rem;
+      }
+      .header-actions {
+        width: 100%;
+        justify-content: space-between;
+        gap: 0.4rem;
+        overflow-x: auto;
+      }
+      .view-toggle-wrap {
+        flex: 1;
+        justify-content: center;
+      }
+      .view-btn {
+        padding: 0.35rem 0.5rem;
+        font-size: 0.75rem;
+      }
+      .bgm-btn {
+        padding: 0.35rem 0.6rem;
+        font-size: 0.75rem;
+      }
+
+      /* 2. 전체 워크스페이스 레이아웃 모바일 스택 */
+      .workspace-layout {
+        height: calc(100vh - 105px);
+        flex-direction: column;
+      }
+      .left-sidebar {
+        width: 100% !important;
+        min-width: 100% !important;
+        max-height: 220px;
+        border-right: none;
+        border-bottom: 1px solid var(--border-dark);
+      }
+      .main-viewport {
+        flex: 1;
+        width: 100%;
+        overflow-y: auto;
+      }
+
+      /* 3. 우측 인스펙터 서랍 모바일 풀 오버레이 */
+      .right-drawer {
+        position: fixed;
+        right: 0;
+        bottom: 0;
+        top: auto;
+        width: 100% !important;
+        min-width: 100% !important;
+        height: 70vh !important;
+        z-index: 500;
+        box-shadow: 0 -10px 30px rgba(0,0,0,0.8);
+        border-top: 2px solid var(--gold-primary);
+        border-radius: 16px 16px 0 0;
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        transform: translateY(0);
+      }
+      .right-drawer.closed {
+        margin-right: 0;
+        transform: translateY(105%);
+      }
+
+      /* 4. 슬라이드 뷰어 모바일 1열 스택 */
+      .slide-viewer {
+        padding: 1rem;
+        overflow-y: auto;
+      }
+      .slide-card {
+        grid-template-columns: 1fr;
+        gap: 1.2rem;
+        padding: 1.2rem;
+      }
+      .slide-title {
+        font-size: 1.35rem;
+      }
+      .slide-desc {
+        font-size: 0.95rem;
+        line-height: 1.6;
+      }
+      .slide-img-wrap {
+        height: 240px;
+      }
+
+      /* 5. 사료 카드 그리드 모바일 1열 맞춤 */
+      .catalog-cards-grid {
+        grid-template-columns: 1fr;
+        padding-right: 0;
+      }
+
+      /* 6. 원문 뷰어 모달 팝업 모바일 풀스크린 맞춤 */
+      .floating-window {
+        width: 95vw !important;
+        min-width: 95vw !important;
+        height: 92vh !important;
+        left: 2.5vw !important;
+        top: 4vh !important;
+        transform: none !important;
+      }
+      .floating-title-bar {
+        padding: 0.5rem 0.8rem;
+      }
+      .floating-window-title {
+        font-size: 0.95rem;
+        max-width: 75vw;
+      }
+      .floating-body {
+        padding: 1.2rem 1rem;
+        font-size: 0.95rem;
+        line-height: 1.7;
+      }
+      .reader-toolbar {
+        flex-wrap: wrap;
+        gap: 0.3rem;
+      }
+
+      /* 7. 온톨로지 D3 컨트롤 바 모바일 축소 */
+      .graph-float-controls {
+        top: 0.5rem;
+        left: 0.5rem;
+        right: 0.5rem;
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+      .g-btn {
+        font-size: 0.72rem;
+        padding: 0.25rem 0.5rem;
+      }
+    }
   </style>
 </head>
 <body>

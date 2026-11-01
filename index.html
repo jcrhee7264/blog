@@ -2186,6 +2186,23 @@
       min-width: 3rem;
       text-align: right;
     }
+    #lightboxVideo {
+      display: none;
+      max-width: 90vw;
+      max-height: 85vh;
+      margin: auto;
+      border-radius: 4px;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.8);
+      background: #000;
+    }
+    .image-lightbox-overlay.video-mode #lightboxVideo {
+      display: block;
+    }
+    .image-lightbox-overlay.video-mode #lightboxImage,
+    .image-lightbox-overlay.video-mode .lightbox-zoom-label,
+    .image-lightbox-overlay.video-mode #btnLightboxOriginal {
+      display: none;
+    }
 
     /* [살아있는 사료 (Living Photo) — 호버/터치 시 영상 재생] */
     .living-photo-wrap {
@@ -3623,21 +3640,23 @@
       wrap.addEventListener('pointerenter', (e) => { if (e.pointerType === 'mouse') play(); });
       wrap.addEventListener('pointerleave', (e) => { if (e.pointerType === 'mouse') stop(); });
 
-      // 터치: 첫 탭은 재생, 재생 중 탭은 라이트박스 확대 / 마우스: 클릭 시 바로 라이트박스
-      const openInLightbox = img.onclick;
+      // 터치: 첫 탭은 무음 재생, 재생 중 탭은 확대창 / 마우스: 클릭 시 바로 확대창 (확대창은 소리 켜고 재생)
+      const hasCaption = !!wrap.parentElement.querySelector('.img-caption');
       img.onclick = () => {
         if (lastPointer !== 'mouse' && !wrap.classList.contains('playing')) {
           play();
           return;
         }
-        openInLightbox();
+        stop();
+        openLightbox(img.src, hasCaption ? img.alt : '', video.src);
       };
     }
 
     // ---------------------------------------------------- 사료 사진 라이트박스 뷰어
     const lightboxState = { scale: 1, fitWidth: 0 };
 
-    function openLightbox(src, alt) {
+    function openLightbox(src, alt, videoSrc) {
+      const overlay = document.getElementById('imageLightboxModal');
       const img = document.getElementById('lightboxImage');
       const caption = (alt && alt !== '사료 사진') ? alt : (readerState.currentPost ? readerState.currentPost.title : '');
       lightboxState.scale = 1;
@@ -3646,11 +3665,27 @@
       img.alt = caption || '사료 사진';
       document.getElementById('lightboxCaption').textContent = caption ? `▲ ${caption}` : '';
       applyLightboxScale();
-      document.getElementById('imageLightboxModal').classList.add('active');
+
+      // 살아있는 사료: 클릭(사용자 제스처)으로 연 확대창에서는 소리를 켜고 재생
+      overlay.classList.toggle('video-mode', !!videoSrc);
+      if (videoSrc) {
+        const video = document.getElementById('lightboxVideo');
+        video.src = videoSrc;
+        video.muted = false;
+        video.volume = 0.8;
+        video.play().catch(() => { video.muted = true; video.play().catch(() => {}); });
+      }
+      overlay.classList.add('active');
     }
 
     function closeLightbox() {
-      document.getElementById('imageLightboxModal').classList.remove('active');
+      const overlay = document.getElementById('imageLightboxModal');
+      const video = document.getElementById('lightboxVideo');
+      video.pause();
+      video.muted = true;
+      video.removeAttribute('src');
+      video.load();
+      overlay.classList.remove('active', 'video-mode');
       document.getElementById('lightboxImage').removeAttribute('src');
     }
 
@@ -3702,6 +3737,7 @@
     }
 
     function handleLightboxWheel(e) {
+      if (document.getElementById('imageLightboxModal').classList.contains('video-mode')) return;
       e.preventDefault();
       const rect = e.currentTarget.getBoundingClientRect();
       zoomLightbox(e.deltaY < 0 ? 1.15 : 1 / 1.15, e.clientX - rect.left, e.clientY - rect.top);
@@ -4178,6 +4214,7 @@
     </div>
     <div class="image-lightbox-content" id="lightboxStage" onwheel="handleLightboxWheel(event)">
       <img id="lightboxImage" alt="" ondblclick="toggleLightboxOriginal()" draggable="false" referrerpolicy="no-referrer">
+      <video id="lightboxVideo" controls loop playsinline muted preload="none"></video>
     </div>
     <div class="lightbox-caption" id="lightboxCaption"></div>
   </div>

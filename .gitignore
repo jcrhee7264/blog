@@ -5,6 +5,14 @@
 assets/*_h264.mp4
 assets/*_h265.mp4
 
+# 살아있는 사료 영상 편집 중간본 (배포 미사용)
+vidclip/사열식_화랑연병장(1968.1.27).mp4
+vidclip/사열식_화랑연병장_0.5배속(1968.1.27).mp4
+vidclip/사열식_화랑연병장_완전판(1968.1.27).mp4
+vidclip/행진1.mp4
+vidclip/행진2.mp4
+vidclip/행진_화랑대_합본_마스터.mp4
+
 # 대용량 사료 이미지 아카이브 (1.1GB 심볼릭 링크 분리)
 images
 images/

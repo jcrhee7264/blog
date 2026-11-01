@@ -1,0 +1,15 @@
+# 이재천 장군 디지털 실록 웹 배포 .gitignore
+# GitHub 단일 파일 100MB 초과 방지
+
+# 100MB 초과 대용량 원본 비디오 (경량화된 _web.mp4는 배포에 포함)
+assets/*_h264.mp4
+assets/*_h265.mp4
+
+# 대용량 사료 이미지 아카이브 (1.1GB 심볼릭 링크 분리)
+images
+images/
+
+# OS 및 에디터 임시 파일
+.DS_Store
+Thumbs.db
+*.tmp
